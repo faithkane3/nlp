@@ -4,49 +4,57 @@ from requests import get
 import os
 from bs4 import BeautifulSoup
 
+# Helper function that requests and parses HTML returning soup object.
+
+def make_soup(url):
+    '''
+    This helper function takes in a url and requests and parses HTML
+    returning a soup object.
+    '''
+    headers = {'User-Agent': 'Codeup Data Science'} 
+    response = get(url, headers=headers)    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    return soup
+
+# Helper function that scrapes the blog urls from the main codeup blog page.
+
 def get_all_urls():
     '''
     This function scrapes all of the Codeup blog urls from
     the main Codeup blog page and returns a list of urls.
     '''
-    # The main Codeup blog page with all the urls
+    # The base url for the main Codeup blog page
     url = 'https://codeup.com/resources/#blog'
-    
     headers = {'User-Agent': 'Codeup Data Science'} 
     
-    # Send request to main page and get response
-    response = get(url, headers=headers)
+    # Make request and soup object using helper
+    soup = make_soup(url)
     
-    # Create soup object using response
-    soup = BeautifulSoup(response.text, 'html.parser')
+    # Create a list of the anchor elements that hold the urls.
+    urls_list = soup.find_all('a', class_='jet-listing-dynamic-link__link')
     
-    # Create empty list to hold the urls for all blogs
-    urls = []
-    
-    # Create a list of the element tags that hold the href/links
-    link_list = soup.find_all('a', class_='jet-listing-dynamic-link__link')
-    
-    # get the href/link from each element tag in my list
-    for link in link_list:
-        
-        # Add the link to my urls list
-        urls.append(link['href'])
+    # I'm using a set comprehension to return only unique urls because list contains duplicate urls.
+    urls = {link.get('href') for link in urls_list}
+
+    # I'm converting my set to a list of urls.
+    urls = list(urls)
         
     return urls
 
+# Function to create a DataFrame of article title and content and write to a json file.
 
-def get_blog_articles(urls, cache=False):
+def get_blog_articles(urls, cached=False):
     '''
     This function takes in a list of Codeup Blog urls and a parameter
-    with default cache == False which returns a df from a csv file.
-    If cache == True, the function scrapes the title and text for each url, creates a list of dictionaries
-    with the title and text for each blog, converts list to df, and returns df.
+    with default cached == False which scrapes the title and text for each url, 
+    creates a list of dictionaries with the title and text for each blog, 
+    converts list to df, and returns df.
+    If cached == True, the function returns a df from a json file.
     '''
-
-    if cache == False:
-        df = pd.read_csv('big_blogs.csv', index_col=0)
+    if cached == True:
+        df = pd.read_json('big_blogs.json')
     else:
-        headers = {'User-Agent': 'Codeup Data Science'} 
+        headers = {'User-Agent': 'Codeup Bayes Data Science'} 
 
         # Create an empty list to hold dictionaries
         articles = []
@@ -61,57 +69,56 @@ def get_blog_articles(urls, cache=False):
             soup = BeautifulSoup(response.text, 'html.parser')
 
             # Save the title of each blog in variable title
-            title = soup.find('h1', itemprop='headline' ).text
+            title = soup.find('h1').text
 
             # Save the text in each blog to variable text
-            text = soup.find('div', itemprop='text').text
+            content = soup.find('div', class_="jupiterx-post-content").text
 
-            # Create a dictionary holding the title and text for each blog
-            article = {'title': title, 'content': text}
+            # Create a dictionary holding the title and content for each blog
+            article = {'title': title, 'content': content}
 
             # Add each dictionary to the articles list of dictionaries
             articles.append(article)
+            
         # convert our list of dictionaries to a df
         df = pd.DataFrame(articles)
 
-        # Write df to csv file for faster access
-        df.to_csv('big_blogs.csv')
+        # Write df to a json file for faster access
+        df.to_json('big_blogs.json')
     
     return df
 
-
-def get_news_articles(cache=False):
+def get_news_articles(cached=False):
     '''
-    This function uses a cache parameter with default cache == False to give the option of 
-    returning in a df of inshorts topics and info by reading a csv file or
-    of doing a fresh scrape of inshort pages with topics business, sports, technology,
-    and entertainment and writing the returned df to a csv file.
+    This function with default cached == False does a fresh scrape of inshort pages with topics 
+    business, sports, technology, and entertainment and writes the returned df to a json file.
+    cached == True returns a df read in from a json file.
     '''
-    # default to read in a csv instead of scrape for df
-    if cache == False:
-        df = pd.read_csv('articles.csv', index_col=0)
+    # option to read in a json file instead of scrape for df
+    if cached == True:
+        df = pd.read_json('articles.json')
         
-    # cache == True completes a fresh scrape for df    
+    # cached == True completes a fresh scrape for df    
     else:
     
         # Set base_url and headers that will be used in get request
 
         base_url = 'https://inshorts.com/en/read/'
         headers = {'User-Agent': 'Codeup Data Science'}
-
+        
         # List of topics to scrape
         topics = ['business', 'sports', 'technology', 'entertainment']
-
+        
         # Create an empty list, articles, to hold our dictionaries
         articles = []
 
         for topic in topics:
-
-            # Get a response object from the main inshorts page
-            response = get(base_url + topic, headers=headers)
-
-            # Create soup object using response from inshort
-            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Create url with topic endpoint
+            topic_url = base_url + topic
+            
+            # Make request and soup object using helper
+            soup = make_soup(topic_url)
 
             # Scrape a ResultSet of all the news cards on the page
             cards = soup.find_all('div', class_='news-card')
@@ -131,10 +138,10 @@ def get_news_articles(cache=False):
                 # Add the dictionary, article, to our list of dictionaries, articles.
                 articles.append(article)
             
-        # Why not return it as a DataFrame?!
+        # Create a DataFrame from list of dictionaries
         df = pd.DataFrame(articles)
         
         # Write df to csv for future use
-        df.to_csv('articles.csv')
+        df.to_json('articles.json')
     
     return df
