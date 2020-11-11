@@ -53,6 +53,8 @@ def get_blog_articles(urls, cached=False):
     '''
     if cached == True:
         df = pd.read_json('big_blogs.json')
+        
+    # cached == False completes a fresh scrape for df     
     else:
         headers = {'User-Agent': 'Codeup Bayes Data Science'} 
 
