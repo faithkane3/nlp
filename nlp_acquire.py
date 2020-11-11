@@ -98,11 +98,10 @@ def get_news_articles(cached=False):
     if cached == True:
         df = pd.read_json('articles.json')
         
-    # cached == True completes a fresh scrape for df    
+    # cached == False completes a fresh scrape for df    
     else:
     
         # Set base_url and headers that will be used in get request
-
         base_url = 'https://inshorts.com/en/read/'
         headers = {'User-Agent': 'Codeup Data Science'}
         
