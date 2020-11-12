@@ -41,7 +41,7 @@ def get_all_urls():
         
     return urls
 
-# Function to create a DataFrame of article title and content and write to a json file.
+# Function to create a DataFrame of article, title, and content and write to a json file.
 
 def get_blog_articles(urls, cached=False):
     '''
