@@ -25,7 +25,6 @@ def get_all_urls():
     '''
     # The base url for the main Codeup blog page
     url = 'https://codeup.com/resources/#blog'
-    headers = {'User-Agent': 'Codeup Data Science'} 
     
     # Make request and soup object using helper
     soup = make_soup(url)
@@ -56,7 +55,6 @@ def get_blog_articles(urls, cached=False):
         
     # cached == False completes a fresh scrape for df     
     else:
-        headers = {'User-Agent': 'Codeup Bayes Data Science'} 
 
         # Create an empty list to hold dictionaries
         articles = []
@@ -64,11 +62,8 @@ def get_blog_articles(urls, cached=False):
         # Loop through each url in our list of urls
         for url in urls:
 
-            # get request to each url saved in response
-            response = get(url, headers=headers)
-
-            # Create soup object from response text and parse
-            soup = BeautifulSoup(response.text, 'html.parser')
+            # Make request and soup object using helper
+            soup = make_soup(url)
 
             # Save the title of each blog in variable title
             title = soup.find('h1').text
@@ -103,9 +98,8 @@ def get_news_articles(cached=False):
     # cached == False completes a fresh scrape for df    
     else:
     
-        # Set base_url and headers that will be used in get request
+        # Set base_url that will be used in get request
         base_url = 'https://inshorts.com/en/read/'
-        headers = {'User-Agent': 'Codeup Data Science'}
         
         # List of topics to scrape
         topics = ['business', 'sports', 'technology', 'entertainment']
