@@ -136,7 +136,7 @@ def get_news_articles(cached=False):
         # Create a DataFrame from list of dictionaries
         df = pd.DataFrame(articles)
         
-        # Write df to csv for future use
+        # Write df to json file for future use
         df.to_json('articles.json')
     
     return df
