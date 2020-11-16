@@ -87,7 +87,7 @@ def remove_stopwords(string, extra_words=[], exclude_words=[]):
     stopword_list = stopwords.words('english')
     
     # Remove additional exclude_words.
-    stopword_list = stopword_list.extend(exclude_words)
+    stopword_list.extend(exclude_words)
     
     # Split words in string.
     words = string.split()
@@ -112,9 +112,11 @@ def prep_article_data(df, column):
     returns a df with the text article title, original text, stemmed text,
     lemmatized text, cleaned text, and cleaned & lemmatized text.
     '''
-    df['clean'] = df[column].apply(basic_clean)
-    df['stemmed'] = df[column].apply(stem)
-    df['lemmatized'] = df[column].apply(lemmatize)
-    df['clean_lemmas'] = df[column].apply(basic_clean).apply(lemmatize)
+    df['clean'] = df[column].apply(basic_clean)\
+                 .apply(tokenize)\
+                 .apply(remove_stopwords)\
+                 .apply(lemmatize)
+    df['stemmed'] = df[column].apply(basic_clean).apply(stem)
+    df['lemmatized'] = df[column].apply(basic_clean).apply(lemmatize)
     
-    return df[['title', 'content', 'stemmed', 'lemmatized', 'clean', 'clean_lemmas']]
+    return df[['title', 'content', 'stemmed', 'lemmatized', 'clean']]
